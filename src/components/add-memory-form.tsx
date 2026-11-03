@@ -128,7 +128,6 @@ export function AddMemoryForm() {
                 <Label htmlFor="jobTitle">Work or job</Label>
                 <Input
                   id="jobTitle"
-                  placeholder=""
                   maxLength={80}
                   {...register("jobTitle")}
                 />
@@ -142,7 +141,6 @@ export function AddMemoryForm() {
                   id="year"
                   type="number"
                   inputMode="numeric"
-                  placeholder=""
                   min={MIN_YEAR}
                   max={MAX_YEAR}
                   {...register("year")}
@@ -157,14 +155,12 @@ export function AddMemoryForm() {
                 <div className="flex gap-2">
                   <Input
                     id="personFirstName"
-                    placeholder=""
                     maxLength={60}
                     className="flex-1"
                     {...register("personFirstName")}
                   />
                   <Input
                     id="personLastInitial"
-                    placeholder="O."
                     maxLength={1}
                     className="w-14 text-center"
                     aria-label="Last initial"
@@ -183,14 +179,12 @@ export function AddMemoryForm() {
                 <div className="flex gap-2">
                   <Input
                     id="personCity"
-                    placeholder=""
                     maxLength={80}
                     className="flex-1"
                     {...register("personCity")}
                   />
                   <Input
                     id="personRegion"
-                    placeholder="State"
                     maxLength={80}
                     className="w-24"
                     aria-label="State or region"
@@ -238,7 +232,6 @@ export function AddMemoryForm() {
                 <Input
                   id="personEmail"
                   type="email"
-                  placeholder="ada@example.com"
                   {...register("personEmail")}
                 />
                 <p className="text-xs text-muted-foreground">
@@ -257,7 +250,6 @@ export function AddMemoryForm() {
               <Input
                 id="authorEmail"
                 type="email"
-                placeholder=""
                 {...register("authorEmail")}
               />
               <FieldError message={formState.errors.authorEmail?.message} />
