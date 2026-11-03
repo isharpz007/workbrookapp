@@ -128,7 +128,7 @@ export function AddMemoryForm() {
                 <Label htmlFor="jobTitle">Work or job</Label>
                 <Input
                   id="jobTitle"
-                  placeholder="Electrician"
+                  placeholder=""
                   maxLength={80}
                   {...register("jobTitle")}
                 />
@@ -157,7 +157,7 @@ export function AddMemoryForm() {
                 <div className="flex gap-2">
                   <Input
                     id="personFirstName"
-                    placeholder="Ada"
+                    placeholder=""
                     maxLength={60}
                     className="flex-1"
                     {...register("personFirstName")}
@@ -183,7 +183,7 @@ export function AddMemoryForm() {
                 <div className="flex gap-2">
                   <Input
                     id="personCity"
-                    placeholder="Lagos"
+                    placeholder=""
                     maxLength={80}
                     className="flex-1"
                     {...register("personCity")}
@@ -257,7 +257,7 @@ export function AddMemoryForm() {
               <Input
                 id="authorEmail"
                 type="email"
-                placeholder="you@example.com"
+                placeholder=""
                 {...register("authorEmail")}
               />
               <FieldError message={formState.errors.authorEmail?.message} />
