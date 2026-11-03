@@ -142,7 +142,7 @@ export function AddMemoryForm() {
                   id="year"
                   type="number"
                   inputMode="numeric"
-                  placeholder="2019"
+                  placeholder=""
                   min={MIN_YEAR}
                   max={MAX_YEAR}
                   {...register("year")}
