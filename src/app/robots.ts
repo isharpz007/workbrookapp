@@ -6,7 +6,14 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: ["/$", "/add", "/privacy"],
-      disallow: ["/memories", "/named", "/manage", "/my-entries", "/admin"],
+      disallow: [
+        "/memories",
+        "/named",
+        "/manage",
+        "/my-entries",
+        "/admin",
+        "/api",
+      ],
     },
   };
 }

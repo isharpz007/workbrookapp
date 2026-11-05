@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Link from "next/link";
 import { formatMemberSince } from "@/lib/format-member-since";
 import { safeCall } from "@/lib/client-errors";
@@ -26,6 +31,33 @@ type UserProfileProps = {
   avatarUrl: string | null;
   createdAt: string;
 };
+
+// localStorage as an external store: "storage" covers other tabs, our own
+// event covers same-tab writes (which don't fire "storage").
+const WB_LOCAL_EVENT = "wb-local";
+
+function subscribeStorage(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(WB_LOCAL_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(WB_LOCAL_EVENT, callback);
+  };
+}
+
+function notifyLocal() {
+  window.dispatchEvent(new Event(WB_LOCAL_EVENT));
+}
+
+const serverNull = () => null;
+
+function useLocalValue(key: string) {
+  return useSyncExternalStore(
+    subscribeStorage,
+    () => window.localStorage.getItem(key),
+    serverNull
+  );
+}
 
 function PhotoPicker({
   label,
@@ -126,20 +158,22 @@ function EditableText({
   maxLength?: number;
   rows?: number;
 }) {
-  const [value, setValue] = useState<string | null>(null);
+  const stored = useLocalValue(storageKey);
+  // Once the user saves, their unsaved-storable override wins for this visit.
+  const [override, setOverride] = useState<string | null | undefined>(
+    undefined
+  );
+  const value = override === undefined ? stored : override;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
 
-  useEffect(() => {
-    setValue(window.localStorage.getItem(storageKey));
-  }, [storageKey]);
-
   function save() {
     const next = draft.trim();
-    setValue(next || null);
+    setOverride(next || null);
     try {
       if (next) window.localStorage.setItem(storageKey, next);
       else window.localStorage.removeItem(storageKey);
+      notifyLocal();
     } catch {
       // Storage unavailable — keep the text for this visit.
     }
@@ -325,34 +359,49 @@ function WorkMemories() {
 }
 
 export function UserProfile({ userId, name, avatarUrl, createdAt }: UserProfileProps) {
-  const [cover, setCover] = useState<string | null>(null);
-  const [avatar, setAvatar] = useState<string | null>(avatarUrl);
   const coverKey = `workbrook:profile:${userId}:cover`;
   const avatarKey = `workbrook:profile:${userId}:avatar`;
   const bioKey = `workbrook:profile:${userId}:bio`;
   const aboutKey = `workbrook:profile:${userId}:about`;
 
-  useEffect(() => {
-    setCover(window.localStorage.getItem(coverKey));
-    setAvatar(window.localStorage.getItem(avatarKey) ?? avatarUrl);
-  }, [coverKey, avatarKey, avatarUrl]);
+  const storedCover = useLocalValue(coverKey);
+  const storedAvatar = useLocalValue(avatarKey);
+  // Overrides keep the preview working this visit even if storage fails.
+  const [coverOverride, setCoverOverride] = useState<
+    string | null | undefined
+  >(undefined);
+  const [avatarOverride, setAvatarOverride] = useState<
+    string | null | undefined
+  >(undefined);
+  const cover = coverOverride === undefined ? storedCover : coverOverride;
+  const avatar =
+    (avatarOverride === undefined ? storedAvatar : avatarOverride) ??
+    avatarUrl;
 
-  function saveImage(key: string, setImage: (value: string) => void) {
+  function saveImage(
+    key: string,
+    setOverride: (value: string) => void
+  ) {
     return (value: string) => {
-      setImage(value);
+      setOverride(value);
       try {
         window.localStorage.setItem(key, value);
+        notifyLocal();
       } catch {
         // Keep the preview for this visit if the browser storage is full.
       }
     };
   }
 
-  function removeImage(key: string, setImage: (value: string | null) => void) {
+  function removeImage(
+    key: string,
+    setOverride: (value: string | null) => void
+  ) {
     return () => {
-      setImage(null);
+      setOverride(null);
       try {
         window.localStorage.removeItem(key);
+        notifyLocal();
       } catch {
         // Storage unavailable — removal still applies for this visit.
       }
@@ -369,8 +418,8 @@ export function UserProfile({ userId, name, avatarUrl, createdAt }: UserProfileP
             label="cover photo"
             showIcon
             image={cover}
-            onChange={saveImage(coverKey, setCover)}
-            onRemove={removeImage(coverKey, setCover)}
+            onChange={saveImage(coverKey, setCoverOverride)}
+            onRemove={removeImage(coverKey, setCoverOverride)}
             className="flex size-full items-center justify-center border-b border-dashed border-slate-300 text-slate-500 transition hover:bg-slate-200/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
           />
         </div>
@@ -380,8 +429,8 @@ export function UserProfile({ userId, name, avatarUrl, createdAt }: UserProfileP
             <PhotoPicker
               label="profile photo"
               image={avatar}
-              onChange={saveImage(avatarKey, setAvatar)}
-              onRemove={removeImage(avatarKey, setAvatar)}
+              onChange={saveImage(avatarKey, setAvatarOverride)}
+              onRemove={removeImage(avatarKey, setAvatarOverride)}
               className="flex size-full items-center justify-center overflow-hidden rounded-xl bg-slate-50 text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             />
           </div>

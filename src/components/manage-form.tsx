@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { toast } from "sonner";
-import { Download, Trash2 } from "lucide-react";
+import { Download, Mail, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +26,7 @@ import {
   deleteMemory,
   exportCsv,
   getManageEntry,
+  requestExportLink,
   updateMemory,
 } from "@/server/actions/manage";
 import { safeCall } from "@/lib/client-errors";
@@ -65,6 +66,7 @@ export function ManageForm({
   const removeLink = useManageLinks((s) => s.remove);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [emailingExport, setEmailingExport] = useState(false);
 
   const { register, control, handleSubmit, watch, formState } = useForm<
     MemoryFormValues,
@@ -130,6 +132,14 @@ export function ManageForm({
     a.download = res.filename;
     a.click();
     URL.revokeObjectURL(a.href);
+  }
+
+  async function onEmailExport() {
+    setEmailingExport(true);
+    const res = await safeCall(requestExportLink(credential));
+    setEmailingExport(false);
+    if (res.ok) toast.success(res.message);
+    else toast.error(res.error);
   }
 
   return (
@@ -270,7 +280,7 @@ export function ManageForm({
               <div className="space-y-2">
                 <Label htmlFor="m-aemail">
                   Your email{" "}
-                  <span className="text-muted-foreground">(optional — to recover your link)</span>
+                  <span className="text-muted-foreground"> optional to recover your link </span>
                 </Label>
                 <Input id="m-aemail" type="email" {...register("authorEmail")} />
                 <FieldError message={formState.errors.authorEmail?.message} />
@@ -291,6 +301,14 @@ export function ManageForm({
             <Button variant="outline" onClick={onExport} disabled={exporting}>
               <Download className="size-4" />
               {exporting ? "Preparing…" : "Download CSV"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={onEmailExport}
+              disabled={emailingExport}
+            >
+              <Mail className="size-4" />
+              {emailingExport ? "Sending…" : "Email me the CSV"}
             </Button>
             <Dialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
               <DialogTrigger

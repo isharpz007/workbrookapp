@@ -7,9 +7,14 @@ import { actionTokens, memories, type Memory } from "@/db/schema";
 import { memoryInputSchema, recoverInputSchema } from "@/lib/validation";
 import { sha256 } from "@/lib/hash";
 import { buildSentence } from "@/lib/sentence";
+import { memoriesToCsv } from "@/lib/csv";
 import { TOKEN_TTL } from "@/lib/constants";
 import { consumeToken, mintToken } from "@/server/tokens";
-import { sendConsentEmail, sendRecoveryEmail } from "@/server/email";
+import {
+  sendConsentEmail,
+  sendExportEmail,
+  sendRecoveryEmail,
+} from "@/server/email";
 import { allow } from "@/server/rate-limit";
 import { verifyTurnstile } from "@/server/turnstile";
 import { action, fail } from "@/server/errors";
@@ -196,11 +201,6 @@ export const deleteMemory = action(
   }
 );
 
-const csvEsc = (v: unknown) => {
-  const s = v == null ? "" : String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-};
-
 /** CSV of your own entries — every entry that shares your author email. */
 export const exportCsv = action("exportCsv", async (credential: string) => {
   const db = getDb();
@@ -215,34 +215,37 @@ export const exportCsv = action("exportCsv", async (credential: string) => {
         .orderBy(desc(memories.createdAt))
     : [m];
 
-  const header =
-    "id,direction,first_name,last_initial,city,region,job,year,status,thanks,created_at";
-  const body = rows
-    .map((r) =>
-      [
-        r.id,
-        r.direction,
-        r.personFirstName,
-        r.personLastInitial,
-        r.personCity,
-        r.personRegion,
-        r.jobTitle,
-        r.year,
-        r.status,
-        r.thanksCount,
-        r.createdAt.toISOString(),
-      ]
-        .map(csvEsc)
-        .join(",")
-    )
-    .join("\n");
-
   return {
     ok: true as const,
-    csv: `${header}\n${body}\n`,
+    csv: memoriesToCsv(rows),
     filename: "workbrook-my-entries.csv",
   };
 });
+
+/**
+ * Emails a one-time CSV download link to the entry's author address — the
+ * plan's export flow for people without their manage link handy.
+ */
+export const requestExportLink = action(
+  "requestExportLink",
+  async (credential: string) => {
+    const m = await resolveCredential(credential, false);
+    if (!m) fail("LINK_EXPIRED");
+    if (!m.authorEmail) {
+      fail("VALIDATION", "Add your email to this entry and save first.");
+    }
+
+    const token = await mintToken(m.id, "export", TOKEN_TTL.exportMs);
+    await sendExportEmail({
+      to: m.authorEmail,
+      url: `${APP_URL()}/api/export?token=${token}`,
+    });
+    return {
+      ok: true as const,
+      message: "Export link sent to the email on this entry.",
+    };
+  }
+);
 
 /**
  * Manage-link recovery — always returns the same response so it can't be

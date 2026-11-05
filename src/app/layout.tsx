@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
+import { SwRegister } from "@/components/sw-register";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -24,6 +25,10 @@ export const metadata: Metadata = {
     "A free public record of who helped people land work. No accounts, no passwords.",
 };
 
+export const viewport: Viewport = {
+  themeColor: "#3b6fd8",
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -32,6 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <AppShell>{children}</AppShell>
+        <SwRegister />
         <Toaster richColors position="top-center" />
       </body>
     </html>

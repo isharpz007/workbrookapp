@@ -20,7 +20,6 @@ import { CircleSlash } from "lucide-react";
 import {
   loginSchema,
   signupSchema,
-  type LoginInput,
   type SignupInput,
 } from "@/lib/validation";
 

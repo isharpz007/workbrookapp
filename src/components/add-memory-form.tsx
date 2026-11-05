@@ -246,7 +246,7 @@ export function AddMemoryForm() {
             <div className="space-y-2">
               <Label htmlFor="authorEmail">
                 Your email{" "}
-                <span className="text-muted-foreground">(optional — to recover your link)</span>
+                <span className="text-muted-foreground"> optional to recover your link </span>
               </Label>
               <Input
                 id="authorEmail"

@@ -4,7 +4,7 @@ import { memories } from "@/db/schema";
 import { toPublicMemory, type PublicMemory } from "@/lib/public-memory";
 
 /** Only these statuses are ever visible on the public wall. */
-const PUBLIC_STATUSES = ["pending_consent", "confirmed"] as const;
+export const PUBLIC_STATUSES = ["pending_consent", "confirmed"] as const;
 
 function escapeLike(s: string) {
   return s.replace(/[%_\\]/g, (c) => `\\${c}`);
