@@ -49,6 +49,59 @@ export async function sendConsentEmail(opts: {
   return { sent: !error, error };
 }
 
+export async function sendReportNotice(opts: {
+  memoryId: string;
+  sentence: string;
+  reason: string;
+}) {
+  const client = getResend();
+  const to = process.env.OWNER_EMAIL;
+  if (!client || !to) return { sent: false as const };
+  const { error } = await client.emails.send({
+    from: FROM(),
+    to,
+    subject: "A memory was reported and hidden",
+    html: `
+      <div style="font-family:sans-serif;max-width:32rem;margin:auto">
+        <h2>Report received</h2>
+        <p><strong>Reason:</strong> ${escapeHtml(opts.reason)}</p>
+        <p><strong>Entry:</strong> ${escapeHtml(opts.sentence)}</p>
+        <p>The entry is hidden until you review it in the admin panel.</p>
+        <p><a href="${APP_URL()}/admin/reports">Review reports</a></p>
+      </div>`,
+  });
+  return { sent: !error, error };
+}
+
+export async function sendRecoveryEmail(opts: {
+  to: string;
+  links: { sentence: string; url: string }[];
+}) {
+  const client = getResend();
+  if (!client) return { sent: false as const };
+  if (await isSuppressed(opts.to)) return { sent: false as const, reason: "suppressed" };
+
+  const items = opts.links
+    .map(
+      (l) =>
+        `<li style="margin-bottom:.75rem"><a href="${l.url}">${escapeHtml(l.sentence)}</a><br><span style="color:#666;font-size:.85rem">${l.url}</span></li>`
+    )
+    .join("");
+
+  const { error } = await client.emails.send({
+    from: FROM(),
+    to: opts.to,
+    subject: "Your Workbrook Memory manage links",
+    html: `
+      <div style="font-family:sans-serif;max-width:32rem;margin:auto">
+        <h2>Your manage links</h2>
+        <p>Each link opens one of your entries so you can edit or remove it. Links work once and expire in 1 hour.</p>
+        <ul>${items}</ul>
+      </div>`,
+  });
+  return { sent: !error, error };
+}
+
 function escapeHtml(s: string) {
   return s.replace(
     /[&<>"']/g,

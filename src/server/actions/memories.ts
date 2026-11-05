@@ -12,41 +12,36 @@ import { verifyTurnstile } from "@/server/turnstile";
 import { allow } from "@/server/rate-limit";
 import { mintToken } from "@/server/tokens";
 import { sendConsentEmail } from "@/server/email";
+import { action, fail } from "@/server/errors";
 
 export type CreateMemoryResult =
   | { ok: true; id: string; manageSecret: string }
   | { ok: false; error: string };
 
-export async function createMemory(input: unknown): Promise<CreateMemoryResult> {
-  // 1. Validate before touching the database.
-  const parsed = memoryInputSchema.safeParse(input);
-  if (!parsed.success) {
-    return {
-      ok: false,
-      error: parsed.error.issues[0]?.message ?? "Check the form and try again.",
-    };
-  }
-  const data = parsed.data;
+export const createMemory = action(
+  "createMemory",
+  async (input: unknown): Promise<CreateMemoryResult> => {
+    const parsed = memoryInputSchema.safeParse(input);
+    if (!parsed.success) {
+      fail(
+        "VALIDATION",
+        parsed.error.issues[0]?.message ?? "Please check your entries."
+      );
+    }
+    const data = parsed.data;
 
-  const ip =
-    (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown";
+    const ip =
+      (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
 
-  // 2. Bot check — skipped when Turnstile isn't configured (local dev).
-  if (!(await verifyTurnstile(data.turnstileToken, ip))) {
-    return { ok: false, error: "Human check failed. Please try again." };
-  }
-
-  try {
-    // 3. Rate limit.
-    if (!(await allow("add", ip, RATE_LIMITS.addPerIpPerDay))) {
-      return {
-        ok: false,
-        error: "You've added a lot today. Please come back tomorrow.",
-      };
+    if (!(await verifyTurnstile(data.turnstileToken, ip))) {
+      fail("HUMAN_CHECK");
     }
 
-    // 4. Store. The raw manage secret only ever lives in the author's link.
+    if (!(await allow("add", ip, RATE_LIMITS.addPerIpPerDay))) {
+      fail("RATE_LIMITED", "You've added a lot today. Please come back tomorrow.");
+    }
+
     const manageSecret = nanoid(32);
     const status =
       data.visibility === "public" ? "pending_consent" : "private";
@@ -68,13 +63,8 @@ export async function createMemory(input: unknown): Promise<CreateMemoryResult> 
       })
       .returning({ id: memories.id });
 
-    // 5. Consent outreach when the entry is shared and we have an address.
     if (status === "pending_consent" && data.personEmail) {
-      const token = await mintToken(
-        memory.id,
-        "consent",
-        TOKEN_TTL.consentMs
-      );
+      const token = await mintToken(memory.id, "consent", TOKEN_TTL.consentMs);
       await sendConsentEmail({
         to: data.personEmail,
         sentence: buildSentence({
@@ -88,13 +78,5 @@ export async function createMemory(input: unknown): Promise<CreateMemoryResult> 
     }
 
     return { ok: true, id: memory.id, manageSecret };
-  } catch (e) {
-    return {
-      ok: false,
-      error:
-        e instanceof Error && e.message.includes("DATABASE_URL")
-          ? e.message
-          : "Something went wrong saving your memory. Please try again.",
-    };
   }
-}
+);

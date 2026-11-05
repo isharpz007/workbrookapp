@@ -1,0 +1,162 @@
+PROJECT PLAN · VERSION 1.0
+
+Workbrook Memory
+
+How I will build it, what I need from you, and how we will work together
+What we are building
+
+A free public record of who helped people land work. Simple, with no accounts and
+no passwords.
+
+One short form                      Private by default                 Consent first
+
+Only the year is required. About a  Nothing is public until the        A named person can confirm, keep
+minute to fill in.                  author shares it. Contact details  private or remove an entry.
+                                    never appear.
+How I will build it
+
+Frontend                           Backend                                Services
+
+Next.js and Tailwind, as an        Supabase Postgres, with all sensitive  Resend for email, Cloudflare
+installable PWA. One codebase for  actions run on the server, never in    Turnstile for the human check,
+phone, tablet and computer.        the browser.                           Vercel for hosting.
+
+Why this stack: the brief asks for one web app that installs on phones, and this is the simplest route that keeps private
+data protected.
+Build order                              2. Add a memory                  3. Public pages
+
+   1. Data and rules                     Form, sentence preview, private  List, search, filters and detail.
+                                         manage link.
+    Tables, limits, and views that hide                                   6. Harden and launch
+    contact details.                     5. Manage and export
+                                                                          Rate limits, accessibility,
+   4. Consent and email                  Edit, delete, and CSV of your    tests, staging.
+                                         own entries.
+    Confirm, keep private,
+    remove, report.
+Stage 1: Look and feel
+
+Brand blue  Links    Accent gold  Confirmed green  Page background  Text
+#3b6fd8     #2e6bd6  #d4a62a      #1e8e5a          #f5f7fb          #1f2430
+
+Same visual language as the Workbrook dashboard: royal-blue sidebar, white rounded cards, soft shadows,
+and a friendly rounded sans-serif (Poppins).
+Stage 2: The app shell
+
+workbrook       Page content goes here
+
+  Home          Blue sidebar on the left, white top bar, cards on a light background. On phones the sidebar becomes a menu.
+  Add a memory
+  Memories
+  My entries
+  Privacy
+Stage 3: Home screen
+
+workbrook       Record who helped you land work.                                                       Add a memory
+
+  Home                       Someone helped me                         I helped someone
+  Add a memory
+  Memories      Search by name, work, company or place  I helped Chinedu O. from Abuja find work.
+  My entries    Ada O. from Lagos helped me find work.  Nurse · 2021
+  Privacy       Electrician · 2019
+                                                           Not yet confirmed
+                   Confirmed
+Stage 4: Add a memory
+
+workbrook       Tell us what happened                    Preview
+
+  Home          Someone helped me      I helped someone  Ada O. from Lagos
+  Add a memory                                           helped me find work.
+  Memories      Work or job            Year
+  My entries      Electrician            2019            Visible to: Only me
+  Privacy
+                                                            Save memory
+
+                Their name             City and state
+                  Ada O.                 Lagos
+Stage 5: Memories and detail
+
+workbrook       Ada O. from Lagos helped me find work.     Ada O. from Lagos helped me
+                   Confirmed                               find work.
+  Home
+  Add a memory  Tunde A. from Ibadan helped me find work.  Electrician · 2019 · Lagos
+  Memories
+  My entries       Not yet confirmed                          Say thank you
+  Privacy
+                                                           Report this entry
+Stage 6: Consent and phone view
+
+Someone has named you                                                                           workbrook
+
+Chinedu O. says you helped him find work as an electrician in 2019. What would you like to do?  Someone has
+                                                                                                named you.
+Confirm  Keep private  Remove
+                                                                                                       Confirm
+
+                                                                                                       Remove
+Feedback on the brief: part 1
+
+1. Consent gap                                            2. Phone contact
+
+Named people with no contact details have no way out. My  Texting is out of scope, so stored phone numbers do
+default: show first name and last initial only, plus a    nothing. My default: email only in version 1.
+Request removal link on every entry.
+
+3. Reports have no owner                                  4. Email abuse
+
+Hidden entries need a reviewer. My default: hide on       Strangers could send any text to any address. My default:
+report, email the owner, add one minimal admin page.      fixed templates, daily limits, a human check and a stop-
+                                                          emailing list.
+Feedback on the brief: part 2
+
+5. Editing after confirmation                              6. Memory wall access
+
+A link holder can change a confirmed name. My              Public or link-only changes search and moderation. My
+default: edits reset it to Not yet confirmed and re-send   recommendation: browsable but not indexed by search
+the confirmation.                                          engines, with unconfirmed names as initials.
+
+7. Lost management links                                   8. Third-party personal data
+
+No email plus cleared storage means the entry is lost. My  Strangers are named and emailed across countries. I need
+default: prompt for an email, offer a download, show a     your answer on retention, deletion and legal responsibility.
+clear warning.                                             This is not legal advice.
+What I will decide myself
+
+Data and security                                         Behaviour and quality
+
+    Extra tables for reports, expiring links and a stop-      Reject impossible and future dates
+    emailing list                                             CSV export of your own entries only
+    Long random secrets, stored only as a hash                WCAG 2.2 AA, light pages for basic phones
+    Length limits on every text field, links removed          One neutral sentence: helped me find work
+    Cloudflare Turnstile, with no trackers
+
+Added tests: links work once then expire, reports hide entries, rate limits trigger, and surnames never appear in the API.
+Decisions I need from you
+
+Memory wall                                                          Reports
+
+Public to anyone, or only people with the link?                      Who reviews them, and how fast?
+
+Non-job wording                                                      Brand and domain
+
+Final wording for artisan work and referrals.                        Part of Workbrook, and which domain name?
+
+Until I hear back, I will use my written defaults and log each one.
+How we will work together
+
+While I build                                    Money and ownership
+
+   A working demo every one to two weeks            Agreed price and milestones
+   A staging link to test on a real phone           Changes go through a change request
+   A decision log for every assumption              You own the domain, hosting, database and
+   The brief's checklist is the measure of done     email accounts
+                                                    I get access, never the other way round
+Launch and handover                                At handover
+
+   Before launch                                      Code in a repo you own, with a README
+                                                      All credentials passed securely
+        Proof that no contact detail leaks            A 30-day bug-fix period
+        A named person removes an entry instantly     A named person who reads the reports
+        One real backup restore
+        Privacy page and report process live
+

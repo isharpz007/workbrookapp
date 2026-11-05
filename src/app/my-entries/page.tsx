@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Card, CardContent } from "@/components/ui/card";
+import { MyEntriesClient } from "@/components/my-entries-client";
 
 export const metadata: Metadata = {
   title: "My entries",
@@ -7,11 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function MyEntriesPage() {
-  return (
-    <Card>
-      <CardContent className="py-10 text-center text-muted-foreground">
-        Managing and exporting your own entries arrives in Phase 5.
-      </CardContent>
-    </Card>
-  );
+  return <MyEntriesClient />;
 }

@@ -59,6 +59,49 @@ export const memoryInputSchema = z.object({
   turnstileToken: z.string().optional(),
 });
 
+export const REPORT_REASONS = [
+  "about_me",
+  "false_info",
+  "abuse",
+  "other",
+] as const;
+
+export const reportInputSchema = z.object({
+  memoryId: z.uuid(),
+  reason: z.enum(REPORT_REASONS),
+  details: optText(LIMITS.reportDetails),
+  turnstileToken: z.string().optional(),
+});
+
+export type ReportInput = z.infer<typeof reportInputSchema>;
+
+export const recoverInputSchema = z.object({
+  email: z.email("Enter a valid email"),
+  turnstileToken: z.string().optional(),
+});
+
+export const loginSchema = z.object({
+  email: z.email("Enter a valid email"),
+  password: z.string().min(8, "At least 8 characters"),
+});
+
+export const signupSchema = loginSchema
+  .extend({
+    fullName: z
+      .string()
+      .trim()
+      .min(2, "Enter your name")
+      .max(80, "Keep it under 80 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+export type LoginInput = z.infer<typeof loginSchema>;
+export type SignupInput = z.infer<typeof signupSchema>;
+
 export type MemoryInput = z.infer<typeof memoryInputSchema>;
 export type MemoryInputRaw = z.input<typeof memoryInputSchema>;
 export type Direction = z.infer<typeof directionSchema>;

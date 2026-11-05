@@ -44,6 +44,8 @@ export const memories = pgTable(
     authorEmail: text("author_email"),
     personEmail: text("person_email"),
 
+    thanksCount: integer("thanks_count").notNull().default(0),
+
     // The raw secret lives only in the author's manage link.
     manageSecretHash: text("manage_secret_hash").notNull(),
 

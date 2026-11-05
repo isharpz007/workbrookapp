@@ -21,6 +21,7 @@ import {
 import { SentencePreview } from "@/components/sentence-preview";
 import { TurnstileField } from "@/components/turnstile-field";
 import { createMemory } from "@/server/actions/memories";
+import { safeCall } from "@/lib/client-errors";
 import {
   memoryInputSchema,
   type MemoryFormValues,
@@ -60,7 +61,7 @@ export function AddMemoryForm() {
   const isPublic = values.visibility === "public";
 
   async function onSubmit(data: MemoryInput) {
-    const res = await createMemory(data);
+    const res = await safeCall(createMemory(data));
     if (!res.ok) {
       toast.error(res.error);
       return;

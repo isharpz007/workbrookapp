@@ -1,7 +1,7 @@
 # Workbrook Memory — Implementation Guide
 
 How to build the Workbrook Memory app described in the project plan, using a
-Next.js full-stack codebase deployed on Vercel with a Neon Postgres database.
+Next.js full-stack codebase deployed on Vercel with a Supabase Postgres database.
 
 ---
 
@@ -10,8 +10,8 @@ Next.js full-stack codebase deployed on Vercel with a Neon Postgres database.
 | Layer | Choice | Why |
 |---|---|---|
 | Framework | Next.js 15 (App Router, TypeScript) | One codebase for UI + backend; server actions and route handlers keep secrets off the client |
-| Database | Neon serverless Postgres (Vercel Marketplace integration) | Managed Postgres with per-branch preview DBs; HTTP driver suits serverless |
-| ORM | Drizzle ORM + drizzle-kit | Lightweight, SQL-first, pairs natively with `@neondatabase/serverless` |
+| Database | Supabase Postgres | Managed Postgres; server actions keep all sensitive work server-side |
+| ORM | Drizzle ORM + drizzle-kit | Lightweight, SQL-first; connects via the Supabase pooler URI |
 | Styling | Tailwind CSS + shadcn/ui | Matches the plan's rounded-card design language; accessible primitives |
 | Icons | lucide-react | shadcn's default icon set |
 | Animation | Framer Motion (`motion`) | Card/page transitions, preview sentence reveal |
@@ -248,7 +248,7 @@ src/
     manage-links.ts             # Zustand+persist: { memoryId: secret } in localStorage
     ui.ts                       # sidebar open, etc.
   db/
-    schema.ts, client.ts        # neon() + drizzle()
+    schema.ts, client.ts        # postgres.js + drizzle()
   lib/
     public-memory.ts, sentence.ts, hash.ts, constants.ts
 ```
@@ -411,11 +411,15 @@ named, manage, my-entries and admin pages.
 
 ---
 
-## 11. Vercel + Neon setup
+## 11. Vercel + Supabase setup
 
 1. Push repo to GitHub → **Import Project** in Vercel.
-2. Vercel → **Storage → Marketplace → Neon** → create database. It injects:
-   `DATABASE_URL` (pooled), plus `POSTGRES_URL*` variants.
+2. Create a project at supabase.com → **Project Settings → Database →
+   Connection string** → copy the pooled (Transaction/Session pooler) URI into
+   `DATABASE_URL` in both Vercel env vars and `.env.local`. Run
+   the files in `supabase/migrations/` in order in the Supabase SQL editor
+   (or `drizzle-kit push`)
+   to create the tables.
 3. `drizzle.config.ts`:
 
 ```ts
@@ -427,12 +431,13 @@ export default defineConfig({
 });
 ```
 
-4. `src/db/client.ts` uses `neon(process.env.DATABASE_URL!)` + `drizzle()`.
+4. `src/db/client.ts` uses `postgres(process.env.DATABASE_URL!)` +
+   `drizzle()` with `prepare: false` (required by the Supabase pooler).
 5. Migrations: `drizzle-kit generate` → commit `drizzle/` → run
    `drizzle-kit migrate` as a Vercel build step (`vercel-build` script) or in
    CI before deploy.
-6. **Preview branches**: Neon's Vercel integration creates a DB branch per
-   preview deployment — each PR gets an isolated database.
+6. **Staging**: use Supabase database branches (or a second free project) for
+   preview deployments.
 7. Env vars (Vercel dashboard):
    `DATABASE_URL`, `RESEND_API_KEY`, `EMAIL_FROM`,
    `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`,
@@ -474,7 +479,7 @@ Vitest unit/API tests — all from the plan's checklist:
   suppresses sends (mock Resend).
 
 Playwright smoke: add → consent link → confirm → appears in list as
-Confirmed; report → hidden. Run against a Neon preview branch.
+Confirmed; report → hidden. Run against a Supabase branch or staging project.
 
 ---
 
@@ -487,7 +492,7 @@ Confirmed; report → hidden. Run against a Neon preview branch.
 4. **Consent and email** — Resend templates, `/named/[token]`, report.
 5. **Manage and export** — `/my-entries`, `/manage/[token]`, CSV.
 6. **Harden and launch** — Turnstile everywhere, accessibility pass, tests,
-   staging on a Vercel preview + Neon branch.
+   staging on Vercel + a Supabase branch.
 
 ---
 
@@ -495,7 +500,7 @@ Confirmed; report → hidden. Run against a Neon preview branch.
 
 - [ ] Proof no contact detail leaks (API payload tests + manual review)
 - [ ] A named person removes an entry instantly (one click, no login)
-- [ ] One real backup restore rehearsed (Neon point-in-time restore)
+- [ ] One real backup restore rehearsed (Supabase backup/PITR)
 - [ ] Privacy page and report process live
 - [ ] `noindex` verified on memory pages
 - [ ] Turnstile + rate limits verified on staging

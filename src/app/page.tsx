@@ -1,11 +1,15 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { HandHeart, Handshake, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MemoryCard } from "@/components/memory-card";
+import { listPublicMemories } from "@/server/queries";
+import { logError } from "@/server/logger";
 import type { PublicMemory } from "@/lib/public-memory";
 
-// Placeholder examples until Phase 4 wires up the real feed.
+// Shown until the database has real public entries.
 const EXAMPLES: PublicMemory[] = [
   {
     id: "example-1",
@@ -30,6 +34,33 @@ const EXAMPLES: PublicMemory[] = [
     createdAt: new Date().toISOString(),
   },
 ];
+
+async function HomeFeed() {
+  let feed = EXAMPLES;
+  let real = false;
+  try {
+    const rows = await listPublicMemories({ limit: 4 });
+    if (rows.length > 0) {
+      feed = rows;
+      real = true;
+    }
+  } catch (err) {
+    logError(err, { action: "HomeFeed" });
+    // DB not configured yet — show examples.
+  }
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {feed.map((m) => (
+        <MemoryCard
+          key={m.id}
+          memory={m}
+          href={real ? `/memories/${m.id}` : undefined}
+        />
+      ))}
+    </div>
+  );
+}
 
 export default function HomePage() {
   return (
@@ -84,11 +115,16 @@ export default function HomePage() {
         </Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {EXAMPLES.map((m) => (
-          <MemoryCard key={m.id} memory={m} />
-        ))}
-      </div>
+      <Suspense
+        fallback={
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        }
+      >
+        <HomeFeed />
+      </Suspense>
     </div>
   );
 }

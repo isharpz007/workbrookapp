@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -110,7 +110,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-brand md:flex">
         <Brand />
-        <NavLinks />
+        <Suspense fallback={null}>
+          <NavLinks />
+        </Suspense>
         <p className="mt-auto px-6 py-5 text-xs text-white/60">
           Who helped you land work.
         </p>
@@ -120,7 +122,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-60 bg-brand p-0">
           <Brand />
-          <NavLinks onNavigate={() => setOpen(false)} />
+          <Suspense fallback={null}>
+            <NavLinks onNavigate={() => setOpen(false)} />
+          </Suspense>
         </SheetContent>
       </Sheet>
 
@@ -145,6 +149,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <span className="hidden text-sm font-medium text-muted-foreground md:inline">
           Workbrook Memory
         </span>
+        <Link
+          href="/login"
+          className="ml-auto text-sm font-medium text-link hover:underline"
+        >
+          Sign in
+        </Link>
       </header>
 
       <main className="flex-1 pt-14 md:pl-60">
@@ -153,7 +163,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      <BottomNav />
+      <Suspense fallback={null}>
+        <BottomNav />
+      </Suspense>
     </div>
   );
 }
