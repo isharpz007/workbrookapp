@@ -7,56 +7,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MemoryCard } from "@/components/memory-card";
 import { listPublicMemories } from "@/server/queries";
 import { logError } from "@/server/logger";
-import type { PublicMemory } from "@/lib/public-memory";
-
-// Shown until the database has real public entries.
-const EXAMPLES: PublicMemory[] = [
-  {
-    id: "example-1",
-    personName: "Ada O.",
-    sentence: "Ada O. from Lagos helped me find work.",
-    jobTitle: "Electrician",
-    year: 2019,
-    city: "Lagos",
-    region: null,
-    status: "confirmed",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "example-2",
-    personName: "C. O.",
-    sentence: "I helped C. O. from Abuja find work.",
-    jobTitle: "Nurse",
-    year: 2021,
-    city: "Abuja",
-    region: null,
-    status: "not_yet_confirmed",
-    createdAt: new Date().toISOString(),
-  },
-];
 
 async function HomeFeed() {
-  let feed = EXAMPLES;
-  let real = false;
+  let rows: Awaited<ReturnType<typeof listPublicMemories>> = [];
   try {
-    const rows = await listPublicMemories({ limit: 4 });
-    if (rows.length > 0) {
-      feed = rows;
-      real = true;
-    }
+    rows = await listPublicMemories({ limit: 4 });
   } catch (err) {
     logError(err, { action: "HomeFeed" });
-    // DB not configured yet — show examples.
+  }
+
+  if (rows.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        No work memories yet — be the first to record one.
+      </p>
+    );
   }
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      {feed.map((m) => (
-        <MemoryCard
-          key={m.id}
-          memory={m}
-          href={real ? `/memories/${m.id}` : undefined}
-        />
+      {rows.map((m) => (
+        <MemoryCard key={m.id} memory={m} href={`/memories/${m.id}`} />
       ))}
     </div>
   );

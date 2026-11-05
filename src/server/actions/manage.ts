@@ -94,6 +94,7 @@ export const getMyEntries = action(
           sentence: buildSentence(m),
           meta,
           status: m.status,
+          direction: m.direction,
         };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
