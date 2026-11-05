@@ -1,10 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getSupabasePublicKey } from "@/lib/supabase/config";
 
 /** Keeps the Supabase auth session cookie fresh on every request. */
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key = getSupabasePublicKey();
   if (!url || !key) return NextResponse.next({ request });
 
   let response = NextResponse.next({ request });

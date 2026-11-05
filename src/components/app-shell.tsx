@@ -1,20 +1,26 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 import {
   Home,
   PlusCircle,
   BookOpen,
   FolderOpen,
+  UserRound,
   ShieldCheck,
   Menu,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { createClient } from "@/lib/supabase/client";
+import { mapAuthError } from "@/lib/auth-errors";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const NAV = [
   { href: "/", label: "Home", icon: Home },
@@ -29,6 +35,7 @@ const BOTTOM_NAV = [
   { href: "/", label: "Home", icon: Home },
   { href: "/add", label: "Add a memory", icon: PlusCircle },
   { href: "/my-entries", label: "My entries", icon: FolderOpen },
+  { href: "/profile", label: "Profile", icon: UserRound },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -65,6 +72,81 @@ function Brand() {
   );
 }
 
+function getProfileName(user: User) {
+  const fullName = user.user_metadata?.full_name;
+  return typeof fullName === "string" && fullName.trim()
+    ? fullName.trim()
+    : user.email ?? "Your profile";
+}
+
+function getInitials(name: string) {
+  return name
+    .split(/[\s@.]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
+function SidebarProfile({
+  user,
+  signingOut,
+  onSignOut,
+}: {
+  user: User | null;
+  signingOut?: boolean;
+  onSignOut?: () => void;
+}) {
+  if (!user) {
+    return (
+      <div className="mt-auto border-t border-white/15 px-5 py-4">
+        <p className="mb-3 text-xs text-white/60">Who helped you land work.</p>
+        <Link
+          href="/login"
+          className="block rounded-lg bg-white/10 px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/15"
+        >
+          Sign in to your account
+        </Link>
+      </div>
+    );
+  }
+
+  const name = getProfileName(user);
+
+  return (
+    <div className="mt-auto border-t border-white/15 px-4 py-4">
+      <Link
+        href="/profile"
+        aria-label={`Open profile for ${name}`}
+        className="flex min-w-0 items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+      >
+        <span
+          aria-hidden="true"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-semibold text-white"
+        >
+          {getInitials(name) || "U"}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-white">{name}</p>
+          {user.email && name !== user.email && (
+            <p className="truncate text-xs text-white/60">{user.email}</p>
+          )}
+        </div>
+      </Link>
+      {onSignOut && (
+        <button
+          type="button"
+          onClick={onSignOut}
+          disabled={signingOut}
+          className="mt-1 w-full rounded-lg px-3 py-2 text-left text-sm text-white/75 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-60"
+        >
+          {signingOut ? "Signing out…" : "Sign out"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function BottomNav() {
   const pathname = usePathname();
   return (
@@ -72,7 +154,7 @@ function BottomNav() {
       aria-label="Primary"
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_3px_rgba(0,0,0,0.06)] md:hidden"
     >
-      <div className="grid grid-cols-3">
+      <div className="grid grid-cols-4">
         {BOTTOM_NAV.map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href);
           const isAdd = href === "/add";
@@ -104,6 +186,56 @@ function BottomNav() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    let active = true;
+    let supabase: ReturnType<typeof createClient>;
+
+    try {
+      supabase = createClient();
+    } catch {
+      return;
+    }
+
+    void supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (active && !error) setUser(data.session?.user ?? null);
+      })
+      .catch(() => {
+        if (active) setUser(null);
+      });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      const { error } = await createClient().auth.signOut();
+      if (error) {
+        toast.error(mapAuthError(error.message));
+        return;
+      }
+      router.refresh();
+    } catch (error) {
+      toast.error(mapAuthError((error as Error)?.message));
+    } finally {
+      setSigningOut(false);
+    }
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -113,9 +245,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Suspense fallback={null}>
           <NavLinks />
         </Suspense>
-        <p className="mt-auto px-6 py-5 text-xs text-white/60">
-          Who helped you land work.
-        </p>
+        <SidebarProfile
+          user={user}
+          signingOut={signingOut}
+          onSignOut={user ? handleSignOut : undefined}
+        />
       </aside>
 
       {/* Nav panel — slides in from the left */}
@@ -125,6 +259,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Suspense fallback={null}>
             <NavLinks onNavigate={() => setOpen(false)} />
           </Suspense>
+          <SidebarProfile
+            user={user}
+            signingOut={signingOut}
+            onSignOut={user ? handleSignOut : undefined}
+          />
         </SheetContent>
       </Sheet>
 
@@ -150,10 +289,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           Workbrook Memory
         </span>
         <Link
-          href="/login"
-          className="ml-auto text-sm font-medium text-link hover:underline"
+          href="/settings"
+          aria-label="Settings"
+          title="Settings"
+          className="ml-auto inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          Sign in
+          <Settings className="size-5" aria-hidden />
         </Link>
       </header>
 

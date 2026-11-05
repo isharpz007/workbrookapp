@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
+import { getSupabasePublicKey } from "@/lib/supabase/config";
 import { mapAuthError } from "@/lib/auth-errors";
 import { ERROR_MESSAGES } from "@/lib/error-codes";
 import { CircleSlash } from "lucide-react";
@@ -35,7 +36,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
   const configured =
     !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    !!getSupabasePublicKey();
 
   const form = useForm<SignupInput>({
     resolver: standardSchemaResolver(
