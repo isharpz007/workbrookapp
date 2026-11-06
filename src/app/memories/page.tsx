@@ -101,8 +101,7 @@ async function Controls({ searchParams }: { searchParams: SearchParams }) {
     const p = new URLSearchParams();
     const merged = { q, status: statusFilter, type: direction, year, ...patch };
     for (const [k, v] of Object.entries(merged)) {
-      const val = k === "status" ? statusFilter : k === "type" ? direction : v;
-      if (val) p.set(k, val);
+      if (v) p.set(k, v);
     }
     const qs = p.toString();
     return `/memories${qs ? `?${qs}` : ""}`;
