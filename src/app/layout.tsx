@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Poppins, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import { SwRegister } from "@/components/sw-register";
+import { WelcomeGate } from "@/components/welcome-gate";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -36,7 +37,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${poppins.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <AppShell>{children}</AppShell>
+        <WelcomeGate>
+          <AppShell>{children}</AppShell>
+        </WelcomeGate>
         <SwRegister />
         <Toaster richColors position="top-center" />
       </body>

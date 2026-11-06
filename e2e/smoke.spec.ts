@@ -1,5 +1,14 @@
 import { expect, test } from "@playwright/test";
 
+// Skip the first-visit welcome screen for these tests.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem("wb-welcomed", "1");
+    } catch {}
+  });
+});
+
 test.describe("public pages", () => {
   test("home page renders heading, CTAs and search", async ({ page }) => {
     await page.goto("/");
