@@ -1,10 +1,12 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MemoryCard } from "@/components/memory-card";
+import { ERROR_MESSAGES } from "@/lib/error-codes";
 import { listMemoryYears, listPublicMemories } from "@/server/queries";
 import { logError } from "@/server/logger";
 
@@ -53,10 +55,11 @@ async function MemoryList({
   if (!dbReady) {
     return (
       <Card>
-        <CardContent className="py-10 text-center text-muted-foreground">
-          The database isn&apos;t connected yet — set
-          <code className="mx-1">DATABASE_URL</code> to your Supabase pooled
-          URI.
+        <CardContent className="space-y-3 py-10 text-center">
+          <p className="text-muted-foreground">{ERROR_MESSAGES.UNAVAILABLE}</p>
+          <Link href="/memories" className="text-sm text-brand underline">
+            Try again
+          </Link>
         </CardContent>
       </Card>
     );

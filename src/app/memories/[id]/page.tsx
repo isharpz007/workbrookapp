@@ -22,7 +22,7 @@ async function MemoryDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const memory = await getPublicMemory(id).catch((err) => {
     logError(err, { action: "MemoryDetail" });
-    return null;
+    throw err;
   });
   if (!memory) notFound();
 

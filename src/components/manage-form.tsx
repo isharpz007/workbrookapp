@@ -39,9 +39,10 @@ import {
 import { MAX_YEAR, MIN_YEAR } from "@/lib/constants";
 import { useManageLinks } from "@/stores/manage-links";
 
-export type ManageEntry = NonNullable<
-  Awaited<ReturnType<typeof getManageEntry>>
->;
+export type ManageEntry = Extract<
+  Awaited<ReturnType<typeof getManageEntry>>,
+  { kind: "entry" }
+>["entry"];
 
 const STATUS_TEXT: Record<string, string> = {
   private: "Private — only you can see this.",

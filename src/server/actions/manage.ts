@@ -116,32 +116,37 @@ export const getMyEntries = action(
 export async function getManageEntry(credential: string) {
   try {
     const m = await resolveCredential(credential, false);
-    if (!m) return null;
+    if (!m) return { kind: "invalid" as const };
     return {
-      id: m.id,
-      direction: m.direction,
-      year: m.year,
-      month: m.month,
-      day: m.day,
-      jobTitle: m.jobTitle ?? "",
-      company: m.company ?? "",
-      workLocation: m.workLocation ?? "",
-      personFirstName: m.personFirstName ?? "",
-      personLastInitial: m.personLastInitial ?? "",
-      personCity: m.personCity ?? "",
-      personRegion: m.personRegion ?? "",
-      personEmail: m.personEmail ?? "",
-      personPhone: m.personPhone ?? "",
-      authorEmail: m.authorEmail ?? "",
-      thankYouMessage: m.thankYouMessage ?? "",
-      visibility:
-        m.status === "private" ? ("only_me" as const) : ("public" as const),
-      status: m.status,
-      thanksCount: m.thanksCount,
+      kind: "entry" as const,
+      entry: {
+        id: m.id,
+        direction: m.direction,
+        year: m.year,
+        month: m.month,
+        day: m.day,
+        jobTitle: m.jobTitle ?? "",
+        company: m.company ?? "",
+        workLocation: m.workLocation ?? "",
+        personFirstName: m.personFirstName ?? "",
+        personLastInitial: m.personLastInitial ?? "",
+        personCity: m.personCity ?? "",
+        personRegion: m.personRegion ?? "",
+        personEmail: m.personEmail ?? "",
+        personPhone: m.personPhone ?? "",
+        authorEmail: m.authorEmail ?? "",
+        thankYouMessage: m.thankYouMessage ?? "",
+        visibility:
+          m.status === "private"
+            ? ("only_me" as const)
+            : ("public" as const),
+        status: m.status,
+        thanksCount: m.thanksCount,
+      },
     };
   } catch (err) {
     logError(err, { action: "getManageEntry" });
-    return null;
+    return { kind: "error" as const };
   }
 }
 

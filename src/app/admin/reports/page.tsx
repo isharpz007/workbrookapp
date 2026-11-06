@@ -3,7 +3,10 @@ import type { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminReports } from "@/components/admin-reports";
+import { ERROR_MESSAGES } from "@/lib/error-codes";
+import { AppError } from "@/server/errors";
 import { listReports } from "@/server/actions/reports";
+import { logError } from "@/server/logger";
 
 export const metadata: Metadata = {
   title: "Reports",
@@ -18,10 +21,29 @@ async function ReportsContent({
   const { key = "" } = await searchParams;
 
   let rows = null;
+  let unavailable = false;
   try {
     rows = await listReports(key);
-  } catch {
-    rows = null;
+  } catch (err) {
+    if (err instanceof AppError && err.code === "FORBIDDEN") {
+      rows = null;
+    } else {
+      logError(err, { action: "AdminReportsPage" });
+      unavailable = true;
+    }
+  }
+
+  if (unavailable) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Something went wrong</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          {ERROR_MESSAGES.UNAVAILABLE}
+        </CardContent>
+      </Card>
+    );
   }
 
   if (!rows) {

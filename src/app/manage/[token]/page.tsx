@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ManageForm } from "@/components/manage-form";
+import { ERROR_MESSAGES } from "@/lib/error-codes";
 import { getManageEntry } from "@/server/actions/manage";
 
 export const metadata: Metadata = {
@@ -16,9 +17,24 @@ async function ManageContent({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const entry = await getManageEntry(token);
+  const result = await getManageEntry(token);
 
-  if (!entry) {
+  if (result.kind === "error") {
+    return (
+      <div className="mx-auto max-w-lg">
+        <Card>
+          <CardHeader>
+            <CardTitle>Something went wrong</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            {ERROR_MESSAGES.UNAVAILABLE}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (result.kind === "invalid") {
     return (
       <div className="mx-auto max-w-lg">
         <Card>
@@ -35,7 +51,7 @@ async function ManageContent({
     );
   }
 
-  return <ManageForm credential={token} entry={entry} />;
+  return <ManageForm credential={token} entry={result.entry} />;
 }
 
 export default function ManagePage({
