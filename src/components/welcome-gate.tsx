@@ -63,7 +63,7 @@ export function WelcomeGate({ children }: { children: React.ReactNode }) {
             </h1>
             <p className="mx-auto mt-4 max-w-xs text-base leading-7 text-muted-foreground sm:max-w-sm">
               A free public record of who helped people land work. No accounts,
-              no passwords private by default, consent first.
+              no passwords. Private by default, consent first.
             </p>
             <Button size="lg" onClick={enter} className="mt-10 w-full text-base">
               Get started

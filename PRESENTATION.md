@@ -48,6 +48,13 @@ passwords — private by default, consent first.*
   newest year first; company is searchable
 - **Privacy note** on the add form itself
 
+### Welcome screen (first visit)
+- A branded **onboarding card** appears once per device/browser on first open —
+  styled after the provided mockup (light page, white card, logo, heading,
+  brand-blue "Get started" button), responsive across screen sizes
+- Dismissed via `localStorage` flag — never shown again on that device; the
+  app renders underneath so nothing is blocked for search engines or SSR
+
 ### Real data only
 - Removed all dummy/example data from the home page — it now shows **only real
   public entries** from the database, with a friendly empty state
@@ -80,10 +87,11 @@ passwords — private by default, consent first.*
 - ✅ Future/impossible dates rejected; links stripped from text; only year required
 
 ### End-to-end tests — Playwright
-`npm run test:e2e` — **9 browser tests, all passing** against the real app:
+`npm run test:e2e` — **10 browser tests, all passing** against the real app:
 page rendering, filter URL/highlight behavior, search empty states, the
-not-found page, required-field validation, and a full
-**create → manage link → delete** round-trip that cleans up after itself.
+not-found page, required-field validation, the first-visit welcome screen,
+and a full **create → manage link → delete** round-trip that cleans up
+after itself.
 
 ### Accessibility pass (WCAG)
 - Fixed real contrast failures: sidebar nav/footer text on brand blue,
@@ -129,7 +137,7 @@ the client — emails, secrets and surnames can never leak.
 ```bash
 npm run dev    # run the app
 npm test       # 17 unit tests — privacy, tokens, reports, rate limits
-npm run test:e2e  # 9 Playwright smoke tests (needs dev server or starts one)
+npm run test:e2e  # 10 Playwright smoke tests (needs dev server or starts one)
 npm run lint   # 0 errors
 npx tsc --noEmit  # clean typecheck
 ```
