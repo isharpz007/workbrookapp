@@ -110,7 +110,7 @@ export function MyEntriesClient() {
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
             Enter the email you used when adding an entry and we&apos;ll send
-            fresh one-time links.
+            fresh one time links.
           </p>
           <div className="flex gap-2">
             <div className="flex-1 space-y-2">
@@ -120,7 +120,6 @@ export function MyEntriesClient() {
               <Input
                 id="recover-email"
                 type="email"
-                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />

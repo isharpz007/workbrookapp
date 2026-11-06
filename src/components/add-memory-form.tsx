@@ -35,7 +35,11 @@ import { useManageLinks } from "@/stores/manage-links";
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-sm text-destructive">{message}</p>;
+  return (
+    <p role="alert" className="text-sm text-destructive">
+      {message}
+    </p>
+  );
 }
 
 export function AddMemoryForm() {
@@ -114,7 +118,7 @@ export function AddMemoryForm() {
                   value={field.value}
                   onValueChange={(v) => field.onChange(v)}
                 >
-                  <TabsList className="w-full">
+                  <TabsList className="w-full" aria-label="Memory direction">
                     <TabsTrigger value="someone_helped_me" className="flex-1">
                       Someone helped me
                     </TabsTrigger>
@@ -251,7 +255,9 @@ export function AddMemoryForm() {
             </div>
 
             <div className="space-y-2">
-              <Label>Who can see this?</Label>
+              <p className="text-sm font-medium leading-none">
+                Who can see this?
+              </p>
               <Controller
                 control={control}
                 name="visibility"
@@ -260,7 +266,10 @@ export function AddMemoryForm() {
                     value={field.value}
                     onValueChange={(v) => field.onChange(v)}
                   >
-                    <TabsList className="w-full">
+                    <TabsList
+                      className="w-full"
+                      aria-label="Who can see this?"
+                    >
                       <TabsTrigger value="only_me" className="flex-1">
                         Only me
                       </TabsTrigger>
@@ -312,7 +321,10 @@ export function AddMemoryForm() {
             <div className="space-y-2">
               <Label htmlFor="authorEmail">
                 Your email{" "}
-                <span className="text-muted-foreground"> optional to recover your link </span>
+                <span className="text-muted-foreground">
+                  {" "}
+                  optional to recover your link
+                </span>
               </Label>
               <Input
                 id="authorEmail"
@@ -340,7 +352,7 @@ export function AddMemoryForm() {
             </div>
 
             <p className="text-xs leading-5 text-muted-foreground">
-              Private by default contact details are never shown publicly.
+              Private by default. Contact details are never shown publicly.
               See our{" "}
               <Link href="/privacy" className="text-link underline">
                 privacy page

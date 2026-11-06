@@ -47,7 +47,9 @@ export default function HomePage() {
           />
           <Input
             name="q"
+            type="search"
             placeholder="Search by name, work, company or place"
+            aria-label="Search work memories"
             className="pl-9"
           />
         </form>

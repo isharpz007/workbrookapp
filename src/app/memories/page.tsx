@@ -126,14 +126,20 @@ async function Controls({ searchParams }: { searchParams: SearchParams }) {
           />
           <Input
             name="q"
+            type="search"
             defaultValue={q}
             placeholder="Name, work, place or year"
+            aria-label="Search memories"
             className="pl-9"
           />
         </form>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-sm">
+      <div
+        className="flex flex-wrap items-center gap-2 text-sm"
+        role="group"
+        aria-label="Filter by type"
+      >
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Type
         </span>
@@ -156,7 +162,11 @@ async function Controls({ searchParams }: { searchParams: SearchParams }) {
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-sm">
+      <div
+        className="flex flex-wrap items-center gap-2 text-sm"
+        role="group"
+        aria-label="Filter by status"
+      >
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Status
         </span>

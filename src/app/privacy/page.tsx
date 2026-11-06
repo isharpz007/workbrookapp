@@ -10,7 +10,7 @@ const POINTS = [
   },
   {
     title: "Consent first",
-    body: "A named person can confirm a memory, keep it private, or have it removed entirely — no account needed.",
+    body: "A named person can confirm a memory, keep it private, or have it removed entirely. No account needed.",
   },
   {
     title: "Contact details never appear",
@@ -18,7 +18,7 @@ const POINTS = [
   },
   {
     title: "Initials until confirmed",
-    body: "Until a named person confirms, only their initials are shown — never a full first name.",
+    body: "Until a named person confirms, only their initials are shown, never a full first name.",
   },
   {
     title: "Request removal",
@@ -26,7 +26,7 @@ const POINTS = [
   },
   {
     title: "No accounts, no passwords",
-    body: "You manage your entries with a private link. Keep it safe — it is the only key.",
+    body: "You manage your entries with a private link. Keep it safe; it is the only key.",
   },
 ];
 

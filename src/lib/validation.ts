@@ -108,28 +108,6 @@ export const recoverInputSchema = z.object({
   turnstileToken: z.string().optional(),
 });
 
-export const loginSchema = z.object({
-  email: z.email("Enter a valid email"),
-  password: z.string().min(8, "At least 8 characters"),
-});
-
-export const signupSchema = loginSchema
-  .extend({
-    fullName: z
-      .string()
-      .trim()
-      .min(2, "Enter your name")
-      .max(80, "Keep it under 80 characters"),
-    confirmPassword: z.string(),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
-
-export type LoginInput = z.infer<typeof loginSchema>;
-export type SignupInput = z.infer<typeof signupSchema>;
-
 export type MemoryInput = z.infer<typeof memoryInputSchema>;
 export type MemoryInputRaw = z.input<typeof memoryInputSchema>;
 export type Direction = z.infer<typeof directionSchema>;

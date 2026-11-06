@@ -80,9 +80,9 @@ export function ReportDialog({ memoryId }: { memoryId: string }) {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Reason</Label>
+            <p className="text-sm font-medium leading-none">Reason</p>
             <Select value={reason} onValueChange={(v) => setReason(String(v))}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full" aria-label="Reason">
                 <SelectValue placeholder="Choose a reason" />
               </SelectTrigger>
               <SelectContent>
