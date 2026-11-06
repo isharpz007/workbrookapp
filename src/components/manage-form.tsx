@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -77,13 +78,19 @@ export function ManageForm({
     defaultValues: {
       direction: entry.direction,
       year: entry.year,
+      month: entry.month != null ? String(entry.month) : "",
+      day: entry.day != null ? String(entry.day) : "",
       jobTitle: entry.jobTitle,
+      company: entry.company,
+      workLocation: entry.workLocation,
       personFirstName: entry.personFirstName,
       personLastInitial: entry.personLastInitial,
       personCity: entry.personCity,
       personRegion: entry.personRegion,
       authorEmail: entry.authorEmail,
       personEmail: entry.personEmail,
+      personPhone: entry.personPhone,
+      thankYouMessage: entry.thankYouMessage,
       visibility: entry.visibility,
       turnstileToken: "",
     },
@@ -182,6 +189,18 @@ export function ManageForm({
                   <FieldError message={formState.errors.jobTitle?.message} />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="m-company">Company or work holder</Label>
+                  <Input
+                    id="m-company"
+                    maxLength={80}
+                    {...register("company")}
+                  />
+                  <FieldError message={formState.errors.company?.message} />
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-2">
                   <Label htmlFor="m-year">
                     Year <span className="text-destructive">*</span>
                   </Label>
@@ -195,6 +214,40 @@ export function ManageForm({
                   />
                   <FieldError message={formState.errors.year?.message} />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="m-month">Month</Label>
+                  <Input
+                    id="m-month"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={12}
+                    {...register("month")}
+                  />
+                  <FieldError message={formState.errors.month?.message} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="m-day">Day</Label>
+                  <Input
+                    id="m-day"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={31}
+                    {...register("day")}
+                  />
+                  <FieldError message={formState.errors.day?.message} />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="m-workloc">Location of the work</Label>
+                <Input
+                  id="m-workloc"
+                  maxLength={120}
+                  {...register("workLocation")}
+                />
+                <FieldError message={formState.errors.workLocation?.message} />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -267,13 +320,28 @@ export function ManageForm({
               </div>
 
               {isPublic && (
-                <div className="space-y-2">
-                  <Label htmlFor="m-pemail">
-                    Their email{" "}
-                    <span className="text-muted-foreground">(so they can confirm)</span>
-                  </Label>
-                  <Input id="m-pemail" type="email" {...register("personEmail")} />
-                  <FieldError message={formState.errors.personEmail?.message} />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="m-pemail">
+                      Their email{" "}
+                      <span className="text-muted-foreground">(so they can confirm)</span>
+                    </Label>
+                    <Input id="m-pemail" type="email" {...register("personEmail")} />
+                    <FieldError message={formState.errors.personEmail?.message} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="m-pphone">
+                      Their phone{" "}
+                      <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Input
+                      id="m-pphone"
+                      type="tel"
+                      maxLength={30}
+                      {...register("personPhone")}
+                    />
+                    <FieldError message={formState.errors.personPhone?.message} />
+                  </div>
                 </div>
               )}
 
@@ -284,6 +352,23 @@ export function ManageForm({
                 </Label>
                 <Input id="m-aemail" type="email" {...register("authorEmail")} />
                 <FieldError message={formState.errors.authorEmail?.message} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="m-tym">
+                  Thank-you message{" "}
+                  <span className="text-muted-foreground">(optional)</span>
+                </Label>
+                <Textarea
+                  id="m-tym"
+                  rows={3}
+                  maxLength={500}
+                  placeholder="A note shown with this memory…"
+                  {...register("thankYouMessage")}
+                />
+                <FieldError
+                  message={formState.errors.thankYouMessage?.message}
+                />
               </div>
 
               <Button type="submit" className="w-full" disabled={formState.isSubmitting}>

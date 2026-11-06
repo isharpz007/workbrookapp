@@ -123,6 +123,36 @@ export async function sendRecoveryEmail(opts: {
   return { sent: !error, error };
 }
 
+export async function sendThankYouEmail(opts: {
+  to: string;
+  message: string;
+  sentence: string;
+  token: string;
+}) {
+  const client = getResend();
+  if (!client) return { sent: false as const, reason: "RESEND_API_KEY unset" };
+  if (await isSuppressed(opts.to)) return { sent: false as const, reason: "suppressed" };
+  if (!(await withinDailyCap(opts.to))) return { sent: false as const, reason: "rate_limited" };
+
+  const url = `${APP_URL()}/named/${opts.token}`;
+  const { error } = await client.emails.send({
+    from: FROM(),
+    to: opts.to,
+    subject: "Someone sent you a thank-you on Workbrook Memory",
+    html: `
+      <div style="font-family:sans-serif;max-width:32rem;margin:auto">
+        <h2>Thank you.</h2>
+        <p style="font-size:1.1rem">${escapeHtml(opts.sentence)}</p>
+        <blockquote style="border-left:3px solid #d4a62a;padding-left:1rem;margin:1rem 0;font-style:italic">${escapeHtml(opts.message)}</blockquote>
+        <p>You can review this memory — confirm it, keep it private, or have it removed — with one link, no sign-in needed.</p>
+        <p><a href="${url}" style="background:#3b6fd8;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;text-decoration:none">Review this memory</a></p>
+        <p style="color:#666;font-size:.85rem">This link works once and expires in 7 days.</p>
+        ${stopFooter(opts.to)}
+      </div>`,
+  });
+  return { sent: !error, error };
+}
+
 export async function sendExportEmail(opts: { to: string; url: string }) {
   const client = getResend();
   if (!client) return { sent: false as const, reason: "RESEND_API_KEY unset" };

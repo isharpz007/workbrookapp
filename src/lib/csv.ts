@@ -6,9 +6,9 @@ const csvEsc = (v: unknown) => {
 };
 
 const HEADER =
-  "id,direction,first_name,last_initial,city,region,job,year,status,thanks,created_at";
+  "id,direction,first_name,last_initial,city,region,work_location,job,company,year,month,day,status,thanks,created_at";
 
-/** CSV of a user's own entries — shared by the action and /api/export. */
+/** CSV of a user's own entries — private contact fields are never included. */
 export function memoriesToCsv(rows: Memory[]) {
   const body = rows
     .map((r) =>
@@ -19,8 +19,12 @@ export function memoriesToCsv(rows: Memory[]) {
         r.personLastInitial,
         r.personCity,
         r.personRegion,
+        r.workLocation,
         r.jobTitle,
+        r.company,
         r.year,
+        r.month,
+        r.day,
         r.status,
         r.thanksCount,
         r.createdAt.toISOString(),

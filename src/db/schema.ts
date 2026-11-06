@@ -36,13 +36,21 @@ export const memories = pgTable(
     personRegion: text("person_region"),
 
     jobTitle: text("job_title"),
+    company: text("company"), // employer, client or person who held the work
+    workLocation: text("work_location"), // where the work happened
     year: smallint("year").notNull(),
+    month: smallint("month"),
+    day: smallint("day"),
 
     status: statusEnum("status").notNull().default("private"),
 
     // Private contact data — never selected into public queries.
     authorEmail: text("author_email"),
     personEmail: text("person_email"),
+    personPhone: text("person_phone"),
+
+    // Optional thank-you note written by the author (max 500 chars).
+    thankYouMessage: text("thank_you_message"),
 
     thanksCount: integer("thanks_count").notNull().default(0),
 
@@ -87,6 +95,21 @@ export const reports = pgTable("reports", {
   status: text("status").notNull().default("open"), // open | resolved
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// Thank-you messages left on public entries by visitors.
+export const thankYouMessages = pgTable(
+  "thank_you_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    memoryId: uuid("memory_id")
+      .references(() => memories.id, { onDelete: "cascade" })
+      .notNull(),
+    message: text("message").notNull(),
+    deliveryStatus: text("delivery_status").notNull(), // sent | failed | not_sent
+    sentAt: timestamp("sent_at").defaultNow().notNull(),
+  },
+  (t) => [index("thanks_memory_idx").on(t.memoryId)]
+);
 
 export const stopEmails = pgTable("stop_emails", {
   emailHash: text("email_hash").primaryKey(), // sha256(lowercased email)

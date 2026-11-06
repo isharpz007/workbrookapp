@@ -3,18 +3,24 @@
 import { and, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { getDb } from "@/db/client";
-import { actionTokens, memories, type Memory } from "@/db/schema";
-import { memoryInputSchema, recoverInputSchema } from "@/lib/validation";
+import { actionTokens, memories, thankYouMessages, type Memory } from "@/db/schema";
+import {
+  memoryInputSchema,
+  recoverInputSchema,
+  thankYouInputSchema,
+} from "@/lib/validation";
 import { sha256 } from "@/lib/hash";
 import { buildSentence } from "@/lib/sentence";
 import { memoriesToCsv } from "@/lib/csv";
-import { TOKEN_TTL } from "@/lib/constants";
+import { RATE_LIMITS, TOKEN_TTL } from "@/lib/constants";
 import { consumeToken, mintToken } from "@/server/tokens";
 import {
   sendConsentEmail,
   sendExportEmail,
   sendRecoveryEmail,
+  sendThankYouEmail,
 } from "@/server/email";
+import { PUBLIC_STATUSES } from "@/server/queries";
 import { allow } from "@/server/rate-limit";
 import { verifyTurnstile } from "@/server/turnstile";
 import { action, fail } from "@/server/errors";
@@ -115,13 +121,19 @@ export async function getManageEntry(credential: string) {
       id: m.id,
       direction: m.direction,
       year: m.year,
+      month: m.month,
+      day: m.day,
       jobTitle: m.jobTitle ?? "",
+      company: m.company ?? "",
+      workLocation: m.workLocation ?? "",
       personFirstName: m.personFirstName ?? "",
       personLastInitial: m.personLastInitial ?? "",
       personCity: m.personCity ?? "",
       personRegion: m.personRegion ?? "",
       personEmail: m.personEmail ?? "",
+      personPhone: m.personPhone ?? "",
       authorEmail: m.authorEmail ?? "",
+      thankYouMessage: m.thankYouMessage ?? "",
       visibility:
         m.status === "private" ? ("only_me" as const) : ("public" as const),
       status: m.status,
@@ -159,13 +171,19 @@ export const updateMemory = action(
       .set({
         direction: data.direction,
         year: data.year,
+        month: data.month,
+        day: data.day,
         jobTitle: data.jobTitle,
+        company: data.company,
+        workLocation: data.workLocation,
         personFirstName: data.personFirstName,
         personLastInitial: data.personLastInitial,
         personCity: data.personCity,
         personRegion: data.personRegion,
         authorEmail: data.authorEmail,
         personEmail: data.visibility === "public" ? data.personEmail : null,
+        personPhone: data.visibility === "public" ? data.personPhone : null,
+        thankYouMessage: data.thankYouMessage,
         status,
         confirmedAt: status === "pending_consent" ? null : m.confirmedAt,
         updatedAt: new Date(),
@@ -290,18 +308,70 @@ export const requestManageLink = action(
   }
 );
 
-export const sayThanks = action("sayThanks", async (memoryId: string) => {
-  const [row] = await getDb()
-    .update(memories)
-    .set({ thanksCount: sql`${memories.thanksCount} + 1` })
-    .where(
-      and(
-        eq(memories.id, memoryId),
-        inArray(memories.status, ["pending_consent", "confirmed"])
+/**
+ * "Say thank you" — stores the message in thank_you_messages and emails it
+ * to the helper when contact details were given, with a confirm/remove link.
+ */
+export const sendThankYou = action(
+  "sendThankYou",
+  async (memoryId: string, input: unknown) => {
+    const parsed = thankYouInputSchema.safeParse(input);
+    if (!parsed.success) {
+      fail(
+        "VALIDATION",
+        parsed.error.issues[0]?.message ?? "Please write a short message."
+      );
+    }
+
+    const ip =
+      (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
+    if (!(await verifyTurnstile(parsed.data.turnstileToken, ip))) {
+      fail("HUMAN_CHECK");
+    }
+    if (!(await allow("thanks", ip, RATE_LIMITS.thanksPerIpPerDay))) {
+      fail("RATE_LIMITED", "Too many thank-yous today. Try tomorrow.");
+    }
+
+    const db = getDb();
+    const [m] = await db
+      .select()
+      .from(memories)
+      .where(
+        and(
+          eq(memories.id, memoryId),
+          inArray(memories.status, [...PUBLIC_STATUSES])
+        )
       )
-    )
-    .returning({ thanksCount: memories.thanksCount });
-  return row
-    ? { ok: true as const, count: row.thanksCount }
-    : { ok: false as const };
-});
+      .limit(1);
+    if (!m) fail("NOT_FOUND");
+
+    let delivery: "sent" | "failed" | "not_sent" = "not_sent";
+    if (m.personEmail) {
+      const token = await mintToken(m.id, "consent", TOKEN_TTL.consentMs);
+      const res = await sendThankYouEmail({
+        to: m.personEmail,
+        message: parsed.data.message,
+        sentence: buildSentence(m),
+        token,
+      });
+      delivery = res.sent ? "sent" : "failed";
+    }
+
+    await db.insert(thankYouMessages).values({
+      memoryId: m.id,
+      message: parsed.data.message,
+      deliveryStatus: delivery,
+    });
+    const [row] = await db
+      .update(memories)
+      .set({
+        thanksCount: sql`${memories.thanksCount} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(memories.id, m.id))
+      .returning({ thanksCount: memories.thanksCount });
+
+    return { ok: true as const, delivery, count: row?.thanksCount ?? 0 };
+  }
+);

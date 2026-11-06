@@ -5,8 +5,9 @@ import { eq } from "drizzle-orm";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
-import { ThanksButton } from "@/components/thanks-button";
+import { ThankYouDialog } from "@/components/thank-you-dialog";
 import { ReportDialog } from "@/components/report-dialog";
+import { formatMemoryDate } from "@/lib/format-date";
 import { getPublicMemory } from "@/server/queries";
 import { logError } from "@/server/logger";
 import { getDb } from "@/db/client";
@@ -37,7 +38,12 @@ async function MemoryDetail({ params }: { params: Promise<{ id: string }> }) {
     thanks = 0;
   }
 
-  const meta = [memory.jobTitle, memory.year, memory.region ?? memory.city]
+  const meta = [
+    memory.jobTitle,
+    formatMemoryDate(memory.year, memory.month, memory.day),
+    memory.company,
+    memory.workLocation ?? memory.region ?? memory.city,
+  ]
     .filter(Boolean)
     .join(" · ");
 
@@ -46,9 +52,14 @@ async function MemoryDetail({ params }: { params: Promise<{ id: string }> }) {
       <CardContent className="space-y-5 py-6">
         <p className="text-xl font-medium leading-snug">{memory.sentence}</p>
         {meta && <p className="text-sm text-muted-foreground">{meta}</p>}
+        {memory.thankYouMessage && (
+          <blockquote className="border-l-2 border-gold/60 pl-4 text-sm italic leading-6 text-slate-600">
+            {memory.thankYouMessage}
+          </blockquote>
+        )}
         <StatusBadge confirmed={memory.status === "confirmed"} />
         <div className="flex flex-wrap gap-2 pt-2">
-          <ThanksButton memoryId={memory.id} initialCount={thanks} />
+          <ThankYouDialog memoryId={memory.id} initialCount={thanks} />
           <ReportDialog memoryId={memory.id} />
         </div>
       </CardContent>

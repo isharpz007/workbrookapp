@@ -37,6 +37,33 @@ describe("memoryInputSchema", () => {
     }
   });
 
+  it("accepts month and day when given, rejects them out of range", () => {
+    expect(
+      memoryInputSchema.safeParse({ ...minimal, month: 3, day: 12 }).success
+    ).toBe(true);
+    expect(memoryInputSchema.safeParse({ ...minimal, month: 13 }).success).toBe(
+      false
+    );
+    expect(memoryInputSchema.safeParse({ ...minimal, month: 0 }).success).toBe(
+      false
+    );
+    expect(memoryInputSchema.safeParse({ ...minimal, day: 32 }).success).toBe(
+      false
+    );
+    expect(
+      memoryInputSchema.safeParse({ ...minimal, day: 15 }).success
+    ).toBe(false); // day requires month
+  });
+
+  it("accepts years back to 1900 per the brief", () => {
+    expect(memoryInputSchema.safeParse({ ...minimal, year: 1900 }).success).toBe(
+      true
+    );
+    expect(memoryInputSchema.safeParse({ ...minimal, year: 1899 }).success).toBe(
+      false
+    );
+  });
+
   it("keeps only the first letter, uppercased, as last initial", () => {
     const res = memoryInputSchema.safeParse({
       ...minimal,

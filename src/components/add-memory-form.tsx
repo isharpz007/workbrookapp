@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useForm, Controller } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { toast } from "sonner";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -135,6 +137,18 @@ export function AddMemoryForm() {
                 <FieldError message={formState.errors.jobTitle?.message} />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="company">Company or work holder</Label>
+                <Input
+                  id="company"
+                  maxLength={80}
+                  {...register("company")}
+                />
+                <FieldError message={formState.errors.company?.message} />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-2">
                 <Label htmlFor="year">
                   Year <span className="text-destructive">*</span>
                 </Label>
@@ -148,6 +162,41 @@ export function AddMemoryForm() {
                 />
                 <FieldError message={formState.errors.year?.message} />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="month">Month</Label>
+                <Input
+                  id="month"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={12}
+                  {...register("month")}
+                />
+                <FieldError message={formState.errors.month?.message} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="day">Day</Label>
+                <Input
+                  id="day"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={31}
+                  {...register("day")}
+                />
+                <FieldError message={formState.errors.day?.message} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="workLocation">Location of the work</Label>
+              <Input
+                id="workLocation"
+                maxLength={120}
+                placeholder="e.g. Austin, Texas"
+                {...register("workLocation")}
+              />
+              <FieldError message={formState.errors.workLocation?.message} />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -225,22 +274,39 @@ export function AddMemoryForm() {
             </div>
 
             {isPublic && (
-              <div className="space-y-2">
-                <Label htmlFor="personEmail">
-                  Their email{" "}
-                  <span className="text-muted-foreground">(so they can confirm)</span>
-                </Label>
-                <Input
-                  id="personEmail"
-                  type="email"
-                  {...register("personEmail")}
-                />
-                <p className="text-xs text-muted-foreground">
-                  We email them a one-time link to confirm, keep private, or
-                  remove this entry. Their address never appears anywhere.
-                </p>
-                <FieldError message={formState.errors.personEmail?.message} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="personEmail">
+                    Their email{" "}
+                    <span className="text-muted-foreground">(so they can confirm)</span>
+                  </Label>
+                  <Input
+                    id="personEmail"
+                    type="email"
+                    {...register("personEmail")}
+                  />
+                  <FieldError message={formState.errors.personEmail?.message} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="personPhone">
+                    Their phone{" "}
+                    <span className="text-muted-foreground">(optional)</span>
+                  </Label>
+                  <Input
+                    id="personPhone"
+                    type="tel"
+                    maxLength={30}
+                    {...register("personPhone")}
+                  />
+                  <FieldError message={formState.errors.personPhone?.message} />
+                </div>
               </div>
+            )}
+            {isPublic && (
+              <p className="text-xs text-muted-foreground -mt-3">
+                We email them a one-time link to confirm, keep private, or
+                remove this entry. Contact details never appear anywhere.
+              </p>
             )}
 
             <div className="space-y-2">
@@ -255,6 +321,32 @@ export function AddMemoryForm() {
               />
               <FieldError message={formState.errors.authorEmail?.message} />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="thankYouMessage">
+                Thank you message{" "}
+                <span className="text-muted-foreground">(optional)</span>
+              </Label>
+              <Textarea
+                id="thankYouMessage"
+                rows={3}
+                maxLength={500}
+                placeholder="A note shown with this memory…"
+                {...register("thankYouMessage")}
+              />
+              <FieldError
+                message={formState.errors.thankYouMessage?.message}
+              />
+            </div>
+
+            <p className="text-xs leading-5 text-muted-foreground">
+              Private by default contact details are never shown publicly.
+              See our{" "}
+              <Link href="/privacy" className="text-link underline">
+                privacy page
+              </Link>{" "}
+              for what we store and how to ask for removal.
+            </p>
 
             <TurnstileField
               onToken={(t) => setValue("turnstileToken", t ?? "")}

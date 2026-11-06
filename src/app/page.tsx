@@ -19,7 +19,7 @@ async function HomeFeed() {
   if (rows.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        No work memories yet — be the first to record one.
+        No work memories yet! be the first to record one.
       </p>
     );
   }
