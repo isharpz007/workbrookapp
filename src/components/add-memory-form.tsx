@@ -197,7 +197,8 @@ export function AddMemoryForm() {
               <Input
                 id="workLocation"
                 maxLength={120}
-                placeholder="e.g. Austin, Texas"
+                // TODO: Remove this placeholder when the backend is ready
+                // placeholder="e.g. Austin, Texas"
                 {...register("workLocation")}
               />
               <FieldError message={formState.errors.workLocation?.message} />
